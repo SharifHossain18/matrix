@@ -133,29 +133,19 @@ document.addEventListener('DOMContentLoaded', () => {
             locCoords.textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
             
             try {
-                // Using Google Maps Geocoding API for highest accuracy
-                const GOOGLE_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY_HERE";
-                
-                if (GOOGLE_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
-                    locAddress.textContent = "Google Maps API Key required";
-                    locBadge.className = 'status-badge offline';
-                    locStatusText.textContent = 'Setup Needed';
-                    return;
-                }
-
-                const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${GOOGLE_API_KEY}`);
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
                 const data = await response.json();
                 
-                if (data.status === "OK" && data.results.length > 0) {
-                    // Google usually puts the most specific address first
-                    let address = data.results[0].formatted_address;
-                    
-                    locAddress.textContent = address;
-                    locBadge.className = 'status-badge active';
-                    locStatusText.textContent = 'Active';
-                } else {
-                    throw new Error(data.error_message || "No results found");
+                let address = data.display_name;
+                // Make it shorter if it's too long
+                const parts = address.split(', ');
+                if (parts.length > 3) {
+                    address = parts.slice(0, 3).join(', ');
                 }
+                
+                locAddress.textContent = address;
+                locBadge.className = 'status-badge active';
+                locStatusText.textContent = 'Active';
                 
             } catch (error) {
                 console.error("Error fetching address:", error);

@@ -57,9 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function fetchBalance() {
+    async function fetchBalance(showCachedFirst = true) {
         try {
             refreshBtn.classList.add('spinning');
+
+            if (showCachedFirst) {
+                const cached = getCachedData('dpdc_balance_cache');
+                if (cached) {
+                    updateUI(cached.data, true);
+                }
+            }
 
             const response = await fetch('api/balance.json?t=' + new Date().getTime());
 
@@ -73,9 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching balance:', error);
             const cached = getCachedData('dpdc_balance_cache');
-            if (cached) {
+            if (cached && !document.querySelector('.balance-card')) {
                 updateUI(cached.data, true);
-            } else {
+            } else if (!cached) {
                 metersContainer.innerHTML = '<p style="text-align:center; color: #ef4444;">Offline. No cached data available.</p>';
             }
         } finally {
@@ -353,6 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let historyChartInstance = null;
     async function fetchHistory() {
+        const cachedHistory = getCachedData('dpdc_history_cache');
+        if (cachedHistory) {
+            renderChart(cachedHistory.data);
+        }
+
         try {
             const res = await fetch('api/history.json?t=' + new Date().getTime());
             if (!res.ok) throw new Error('History fetch failed');
@@ -363,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error("History chart error:", e);
             const cached = getCachedData('dpdc_history_cache');
-            if (cached) {
+            if (cached && !cachedHistory) {
                 renderChart(cached.data);
             }
         }
@@ -462,6 +474,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    function showCachedWeatherAndPrayers() {
+        const cachedWeather = getCachedData('dpdc_weather_cache');
+        if (cachedWeather) {
+            document.getElementById('weather-temp').textContent = cachedWeather.data.temp;
+            document.getElementById('weather-icon').textContent = cachedWeather.data.icon;
+            document.getElementById('weather-desc').textContent = cachedWeather.data.desc + ' (cached)';
+        }
+
+        const cachedPrayers = getCachedData('dpdc_prayers_cache');
+        if (cachedPrayers) {
+            const t = cachedPrayers.data;
+            document.getElementById('pt-fajr').textContent = t.Fajr;
+            document.getElementById('pt-dhuhr').textContent = t.Dhuhr;
+            document.getElementById('pt-asr').textContent = t.Asr;
+            document.getElementById('pt-maghrib').textContent = t.Maghrib;
+            document.getElementById('pt-isha').textContent = t.Isha;
+            document.getElementById('hijri-date').textContent = t.hijri + ' (cached)';
+        }
+    }
+
+    showCachedWeatherAndPrayers();
 
     // Initial fetch
     fetchBalance();

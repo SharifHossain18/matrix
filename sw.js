@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dpdc-balance-v7';
+const CACHE_NAME = 'dpdc-balance-v8';
 const urlsToCache = [
     './',
     './index.html',
@@ -19,12 +19,27 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // Don't cache the API JSON file, always try to fetch fresh data
-    if (event.request.url.includes('balance.json')) {
+    const url = new URL(event.request.url);
+
+    // Cache API JSON responses (balance, history) for offline
+    if (url.pathname.includes('balance.json') || url.pathname.includes('history.json')) {
         event.respondWith(
-            fetch(event.request).catch(() => {
-                return caches.match(event.request);
-            })
+            fetch(event.request)
+                .then(response => {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, clone);
+                    });
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(event.request).then(cached => {
+                        if (cached) return cached;
+                        return new Response(JSON.stringify([]), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    });
+                })
         );
         return;
     }
@@ -32,11 +47,16 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
             .then(response => {
-                // Cache hit - return response
                 if (response) {
                     return response;
                 }
-                return fetch(event.request);
+                return fetch(event.request).then(networkResponse => {
+                    const clone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, clone);
+                    });
+                    return networkResponse;
+                });
             })
     );
 });

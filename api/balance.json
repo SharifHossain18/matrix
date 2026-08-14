@@ -3,9 +3,9 @@
         "meterNumber": "30063197",
         "accountId": "6603105862",
         "accountType": "Pre Paid",
-        "balanceRemaining": -431.1,
+        "balanceRemaining": 1483.14,
         "connectionStatus": "Active",
-        "lastUpdated": "2026-08-14T15:51:32.132474"
+        "lastUpdated": "2026-08-14T16:52:12.224833"
     },
     {
         "meterNumber": "32405143",
@@ -13,6 +13,6 @@
         "accountType": "Pre Paid",
         "balanceRemaining": 301.57,
         "connectionStatus": "Active",
-        "lastUpdated": "2026-08-14T15:51:36.203091"
+        "lastUpdated": "2026-08-14T16:52:16.084692"
     }
 ]
